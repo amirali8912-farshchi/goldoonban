@@ -41,6 +41,11 @@ class _Logs extends State<Logs> {
           .select()
           .eq('readed', true);
       print(command);
+      final unreadedcommand = await supabase
+          .from('command')
+          .select()
+          .eq('readed', false);
+      print(unreadedcommand);
       final alert = await supabase.from('alerts').select();
       print(alert);
       // .eq('readed', true);
@@ -65,6 +70,28 @@ class _Logs extends State<Logs> {
               command[i]['created_at'].toString(),
               "ابیاری طبق دستور",
               command[i]['created_at'].toString(),
+            ),
+          );
+        }
+        for (var i = 0; i < unreadedcommand.length; i++) {
+          allmessages.add(
+            Message(
+              'unreadedcommand',
+              'آبیاری',
+              unreadedcommand[i]['created_at'].toString(),
+              "ابیاری طبق دستور",
+              unreadedcommand[i]['created_at'].toString(),
+              deletabel: true,
+            ),
+          );
+          commands.add(
+            Message(
+              'unreadedcommand',
+              'آبیاری',
+              unreadedcommand[i]['created_at'].toString(),
+              "ابیاری طبق دستور",
+              unreadedcommand[i]['created_at'].toString(),
+              deletabel: true,
             ),
           );
         }
@@ -357,7 +384,9 @@ class Message extends StatelessWidget {
   final String title;
   final String supabase_time;
   String time;
+  final int? id;
   final String description;
+  bool deletabel;
   Message(
     this.type,
     this.title,
@@ -365,10 +394,25 @@ class Message extends StatelessWidget {
     this.description,
     this.supabase_time, {
     super.key,
+    this.deletabel = false,
+    this.id,
   });
+
+  Future<void> deletetheitem(int idd) async {
+    try {
+      await Supabase.instance.client.from('users').delete().eq('id', idd);
+
+      print('حذف شد');
+      return;
+    } catch (e) {
+      print('خطا در حذف: $e');
+    }
+  }
+
   final Map<String, List> anytypes = {
     'read': [AppColors.purple, Icons.sensors_rounded],
     'command': [AppColors.blue, Icons.water_drop],
+    'unreadedcommand': [AppColors.yellow, Icons.timer],
     'alert': [AppColors.orange, Icons.warning_rounded],
   };
   @override
@@ -426,6 +470,35 @@ class Message extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget Aligned(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: Text(
+        description,
+        style: TextStyle(color: AppColors.textDim, fontSize: 13),
+        // textAlign: TextAlign.start,
+      ),
+    );
+  }
+
+  Widget Rowed(BuildContext context) {
+    return Row(
+      textDirection: TextDirection.rtl,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          description,
+          style: TextStyle(color: AppColors.textDim, fontSize: 13),
+          // textAlign: TextAlign.start,
+        ),
+        IconButton(
+          onPressed: () => {deletetheitem(id ?? 0)},
+          icon: Icon(Icons.delete_outline, color: AppColors.red),
+        ),
+      ],
     );
   }
 }

@@ -13,6 +13,8 @@ class AppColors {
   static const orange = Color(0xFFD98A5F);
   static const track = Color(0x8024302A);
   static const purple = Color(0xFF9B7EDB);
+  static const red = Color(0xFFE06B6B);
+  static const yellow = Color(0xFFE0B85C);
 }
 
 class card extends StatelessWidget {
