@@ -6,12 +6,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'public.dart';
 
 class MyLineChart extends StatelessWidget {
-  const MyLineChart({super.key});
+  final Map data;
 
-  final List<String> labels = const ['شنبه', 'یک', 'دو', 'سه', 'چهار', 'پنج'];
+  MyLineChart({super.key, required this.data});
 
   @override
   Widget build(BuildContext context) {
+    print(data);
+    final List labels = data.keys.toList();
     return SizedBox(
       height: 110,
       width: double.infinity,
@@ -43,7 +45,7 @@ class MyLineChart extends StatelessWidget {
                     return const SizedBox.shrink();
                   }
                   return Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: 8, left: 9),
                     child: Text(
                       labels[index],
                       style: const TextStyle(fontSize: 11, color: Colors.grey),
@@ -56,7 +58,7 @@ class MyLineChart extends StatelessWidget {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 32,
+                reservedSize: 37,
                 interval: 1,
                 getTitlesWidget: (value, meta) => Text(
                   value.toInt().toString(),
@@ -67,15 +69,17 @@ class MyLineChart extends StatelessWidget {
           ),
           lineBarsData: [
             LineChartBarData(
-              spots: const [
-                FlSpot(0, 1),
-                FlSpot(1, 3),
-                FlSpot(2, 2),
-                FlSpot(3, 4),
-                FlSpot(4, 3.5),
-                FlSpot(5, 5),
+              spots: [
+                FlSpot(0, data.values.toList()[0]),
+                // FlSpot(0, data.values.toList()[0]),
+                FlSpot(1, data.values.toList()[1]),
+                FlSpot(2, data.values.toList()[2]),
+                FlSpot(3, data.values.toList()[3]),
+                FlSpot(4, data.values.toList()[4]),
+                FlSpot(5, data.values.toList()[5]),
+                FlSpot(5, data.values.toList()[6]),
               ],
-              isCurved: true,
+              isCurved: false,
               color: const Color(0xFF3B82F6),
               barWidth: 3,
               dotData: const FlDotData(show: true),
@@ -105,76 +109,86 @@ class WaterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    return Container(
+      width: double.infinity,
+      height: 90,
+      margin: const EdgeInsets.all(16),
 
-      child: Container(
-        width: double.infinity,
-        height: 90,
+      decoration: BoxDecoration(
+        color: const Color(0xff5C9CC2),
+        borderRadius: BorderRadius.circular(25),
 
-        margin: const EdgeInsets.all(16),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 15,
+            color: Colors.black.withValues(alpha: .15),
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
 
-        decoration: BoxDecoration(
-          color: const Color(0xff5C9CC2),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(25),
+
+        child: InkWell(
           borderRadius: BorderRadius.circular(25),
 
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 15,
-              color: Colors.black.withValues(alpha: .15),
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
+          // افکت هنگام لمس
+          splashColor: Colors.white.withValues(alpha: .25),
+          highlightColor: Colors.white.withValues(alpha: .12),
 
-        child: Row(
-          children: [
-            const SizedBox(width: 20),
+          onTap: onTap,
 
-            Container(
-              width: 55,
-              height: 55,
+          child: Row(
+            children: [
+              const SizedBox(width: 20),
 
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .25),
-                shape: BoxShape.circle,
-              ),
+              Container(
+                width: 55,
+                height: 55,
 
-              child: const Icon(
-                Icons.water_drop,
-                color: Colors.white,
-                size: 35,
-              ),
-            ),
-
-            const SizedBox(width: 20),
-
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .25),
+                  shape: BoxShape.circle,
                 ),
 
-                const SizedBox(height: 5),
-
-                Text(
-                  countdown,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: .8),
-                    fontSize: 14,
-                  ),
+                child: const Icon(
+                  Icons.water_drop,
+                  color: Colors.white,
+                  size: 35,
                 ),
-              ],
-            ),
-          ],
+              ),
+
+              const SizedBox(width: 20),
+
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  Text(
+                    countdown,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: .8),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -195,13 +209,85 @@ class _Home extends State<Home> {
   //   });
   // }
   String difference = '0.00';
+  Map Dataa = {
+    'a': 1.0,
+    'b': 1.0,
+    'c': 1.0,
+    'd': 1.0,
+    'e': 1.0,
+    'f': 1.0,
+    'ag': 1.0,
+  };
   String connectionStatus = 'disconnected';
   void initState() {
     // TODO: implement initState
     super.initState();
     difrentcommand();
+    averageLast7Days();
     // loadSetting();
     // checkSupabaseConnection();
+  }
+
+  Future<Map<String, double>> averageLast7Days() async {
+    print('future');
+    final now = DateTime.now();
+    final oneWeekAgo = now.subtract(const Duration(days: 7));
+
+    final List data = await Supabase.instance.client
+        .from('reads')
+        .select()
+        .gte('created_at', oneWeekAgo.toIso8601String())
+        .lte('created_at', now.toIso8601String());
+    final weekDays = ['د', 'س', 'چ', 'پ', 'ج', 'ش', 'ی'];
+
+    final Map<String, List<double>> dailyValues = {};
+
+    // جمع‌آوری داده‌ها
+    for (final item in data) {
+      final date = DateTime.parse(item['created_at'].toString());
+
+      final today = DateTime(now.year, now.month, now.day);
+
+      final itemDay = DateTime(date.year, date.month, date.day);
+
+      final difference = today.difference(itemDay).inDays;
+
+      if (difference < 0 || difference > 7) {
+        continue;
+      }
+
+      final dayName = weekDays[date.weekday];
+
+      final value = double.tryParse(item['how_many'].toString())! / 20;
+
+      if (value == null) continue;
+
+      dailyValues.putIfAbsent(dayName, () => []);
+      dailyValues[dayName]!.add(value);
+    }
+
+    // خروجی از 6 روز قبل تا امروز
+    final Map<String, double> result = {};
+
+    for (int i = 6; i >= 0; i--) {
+      final date = now.subtract(Duration(days: i));
+
+      final dayName = weekDays[date.weekday - 1];
+
+      final values = dailyValues[dayName];
+
+      if (values != null && values.isNotEmpty) {
+        result[dayName] = values.reduce((a, b) => a + b) / values.length;
+      } else {
+        // اگر آن روز داده‌ای نداشت
+        result[dayName] = 0;
+      }
+    }
+    setState(() {
+      Dataa = result;
+      print(Dataa);
+    });
+    return result;
   }
 
   Future<void> difrentcommand() async {
@@ -226,6 +312,101 @@ class _Home extends State<Home> {
     }
   }
 
+  //   @override
+  //   Widget build(BuildContext context) {
+  //     double damp = widget.damp;
+  //     return Column(
+  //       children: [
+  //         Text('صفحه اصلی', style: TextStyle(fontSize: 30)),
+  //         // Row(
+  //         //   children: [
+  //         //     Container(
+  //         //       padding: EdgeInsets.all(5),
+  //         //       decoration: BoxDecoration(
+  //         //         color: connectionStatus == 'connected'
+  //         //             ? Colors.green
+  //         //             : connectionStatus == 'disconnected'
+  //         //             ? Colors.brown
+  //         //             : Color(0xFF7A4530),
+  //         //         borderRadius: BorderRadius.circular(20),
+  //         //       ),
+  //         //       child: Column(
+  //         //         children: [
+  //         //           connectionStatus == 'connected'
+  //         //               ? Text("متصل")
+  //         //               : connectionStatus == 'disconnected'
+  //         //               ? Text("قطع")
+  //         //               : Text("درحال بررسی"),
+  //         //         ],
+  //         //       ),
+  //         //     ),
+  //         //   ],
+  //         // ),
+  //         SizedBox(
+  //           width: double.infinity,
+  //           height: 200,
+  //           child: Stack(
+  //             children: [
+  //               // Positioned.fill(child: child)
+  //               Center(
+  //                 child: SizedBox(
+  //                   height: 200,
+  //                   width: 100,
+  //                   child: PlantWaterGauge(waterLevel: damp / 100, width: 200),
+  //                 ),
+  //               ),
+  //               Center(
+  //                 // widthFactor: double.infinity,
+  //                 // heightFactor: 6,
+  //                 child: Text(
+  //                   '$damp%',
+  //                   // style: TextStyle(fontSize: 35, color: Color(value)),
+  //                   style: TextStyle(
+  //                     fontSize: 36,
+  //                     color: Color(0xFFFFF8F0),
+  //                     fontWeight: FontWeight.bold,
+  //                     shadows: [
+  //                       Shadow(
+  //                         color: Colors.black.withValues(alpha: 0.35),
+  //                         blurRadius: 4,
+  //                         offset: const Offset(0, 1),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         Container(
+  //           padding: EdgeInsets.only(bottom: 10.0),
+  //           child: Text('آخرین آبیاری $difference روز پیش'),
+  //         ),
+  //         card(
+  //           child: Column(
+  //             children: [
+  //               Row(
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [Text(' ۷ روز گذشته'), Text('روند رطوبت خاک')],
+  //               ),
+  //               SizedBox(height: 16),
+  //               MyLineChart(data: Dataa),
+  //             ],
+  //           ),
+  //         ),
+  //         WaterButton(
+  //           title: "آبیاری بعدی",
+  //           countdown: "02:35:20 باقی مانده",
+  //           onTap: () async {
+  //             await Supabase.instance.client.from('command').insert({
+  //               "readed": false,
+  //             });
+  //           },
+  //         ),
+  //       ],
+  //     );
+  //   }
+  // }
   @override
   Widget build(BuildContext context) {
     double damp = widget.damp;
@@ -294,13 +475,13 @@ class _Home extends State<Home> {
                 children: [Text(' ۷ روز گذشته'), Text('روند رطوبت خاک')],
               ),
               SizedBox(height: 16),
-              MyLineChart(),
+              MyLineChart(data: Dataa),
             ],
           ),
         ),
         WaterButton(
-          title: "آبیاری بعدی",
-          countdown: "02:35:20 باقی مانده",
+          title: "آبیاری ",
+          countdown: "",
           onTap: () async {
             await Supabase.instance.client.from('command').insert({
               "readed": false,

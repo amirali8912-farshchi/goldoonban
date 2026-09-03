@@ -83,8 +83,10 @@ class _PlantWaterGaugeState extends State<PlantWaterGauge>
     final double scale = widget.width / potViewW;
     final double potHeight = potViewH * scale;
     final double stemHeight = stemViewH * scale;
-    // مقدار هم‌پوشانی ساقه با لبه‌ی گلدان، برای اتصال بصری ساقه به ریشه/خاک
+
+    // مقدار هم‌پوشانی ساقه با لبه‌ی گلدان
     final double overlap = 20 * scale;
+
     final double totalHeight = potHeight + stemHeight - overlap;
 
     return SizedBox(

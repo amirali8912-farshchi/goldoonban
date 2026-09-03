@@ -1,8 +1,196 @@
 import 'package:flutter/material.dart';
 import 'public.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shamsi_date/shamsi_date.dart';
 
-class Logs extends StatelessWidget {
-  const Logs({super.key});
+String toShamsi(String date) {
+  final dt = DateTime.parse(date).toLocal();
+  final j = Jalali.fromDateTime(dt);
+
+  return '${j.year}/${j.month.toString().padLeft(2, '0')}/${j.day.toString().padLeft(2, '0')}'
+      ' - ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+}
+
+class Logs extends StatefulWidget {
+  @override
+  State<Logs> createState() => _Logs();
+}
+
+class _Logs extends State<Logs> {
+  // const Logs({super.key});
+  final supabase = Supabase.instance.client;
+  bool isLoading = true;
+  List<Message> allmessages = [];
+  List<Message> commands = [];
+  List<Message> alerts = [];
+  List<Message> reads = [];
+  List thisalarm = [];
+  @override
+  void initState() {
+    super.initState();
+    getInitialSettings();
+    thisalarm = allmessages;
+    // checkSupabaseConnection();
+  }
+
+  Future<void> getInitialSettings() async {
+    print('iuoqueoqiueio');
+    try {
+      final command = await supabase
+          .from('command')
+          .select()
+          .eq('readed', true);
+      print(command);
+      final alert = await supabase.from('alerts').select();
+      print(alert);
+      // .eq('readed', true);
+      final read = await supabase.from('reads').select();
+      print(read);
+      // .limit(1);
+      setState(() {
+        for (var i = 0; i < command.length; i++) {
+          allmessages.add(
+            Message(
+              'command',
+              'آبیاری',
+              command[i]['created_at'].toString(),
+              "ابیاری طبق دستور",
+              command[i]['created_at'].toString(),
+            ),
+          );
+          commands.add(
+            Message(
+              'command',
+              'آبیاری',
+              command[i]['created_at'].toString(),
+              "ابیاری طبق دستور",
+              command[i]['created_at'].toString(),
+            ),
+          );
+        }
+
+        for (var i = 0; i < alert.length; i++) {
+          allmessages.add(
+            Message(
+              'alert',
+              'هشدار',
+              alert[i]['created_at'].toString(),
+              "این یک هشدار میباشد",
+              alert[i]['created_at'].toString(),
+            ),
+          );
+          alerts.add(
+            Message(
+              'alert',
+              'هشدار',
+              alert[i]['created_at'].toString(),
+              "این یک هشدار میباشد",
+              alert[i]['created_at'].toString(),
+            ),
+          );
+        }
+
+        for (var i = 0; i < read.length; i++) {
+          String howmany = read[i]['how_many'].toString();
+          allmessages.add(
+            Message(
+              'read',
+              'قرائت',
+              read[i]['created_at'].toString(),
+              "رطوبت هنگام خوانش $howmany",
+              read[i]['created_at'].toString(),
+            ),
+          );
+          reads.add(
+            Message(
+              'read',
+              'قرائت',
+              read[i]['created_at'].toString(),
+              "رطوبت هنگام خوانش $howmany",
+              read[i]['created_at'].toString(),
+            ),
+          );
+        }
+        // مرتب‌سازی و تبدیل reads
+        reads.sort((a, b) {
+          final dateA = DateTime.parse(a.time);
+          final dateB = DateTime.parse(b.time);
+          return dateB.compareTo(dateA);
+        });
+
+        for (var i = 0; i < reads.length; i++) {
+          String timee = toShamsi(reads[i].time);
+          reads[i].time = timee;
+          print('asdasdlakd;sakdakdl;  $timee');
+        }
+
+        // مرتب‌سازی و تبدیل commands
+        commands.sort((a, b) {
+          final dateA = DateTime.parse(a.time);
+          final dateB = DateTime.parse(b.time);
+          return dateB.compareTo(dateA);
+        });
+
+        for (var i = 0; i < commands.length; i++) {
+          print('lklk;lklklklkkl;;kl;lk;lklk;l;k;lkkl;;kl');
+          String timee = toShamsi(commands[i].time);
+          print('asdasdlakd;sakdakdl;  $timee');
+          commands[i].time = timee;
+        }
+
+        // مرتب‌سازی و تبدیل alerts
+        alerts.sort((a, b) {
+          final dateA = DateTime.parse(a.time);
+          final dateB = DateTime.parse(b.time);
+          return dateB.compareTo(dateA);
+        });
+
+        for (var i = 0; i < alerts.length; i++) {
+          alerts[i].time = toShamsi(alerts[i].time);
+        }
+
+        // مرتب‌سازی و تبدیل allmessages
+        allmessages.sort((a, b) {
+          final dateA = DateTime.parse(a.time);
+          final dateB = DateTime.parse(b.time);
+          return dateB.compareTo(dateA);
+        });
+
+        for (var i = 0; i < allmessages.length; i++) {
+          allmessages[i].time = toShamsi(allmessages[i].time);
+        }
+        print(command);
+        print(reads);
+        print(alerts);
+
+        // final
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+
+      print('Error getting settings: $e');
+    }
+  }
+
+  // Message returnany(type) {
+  //   List types = {'reads': reads};
+  //   for
+  // }
+  String getLastWeekCount(List<Message> messages) {
+    final now = DateTime.now();
+    final oneWeekAgo = now.subtract(const Duration(days: 7));
+
+    return messages
+        .where((message) {
+          final date = DateTime.parse(message.supabase_time);
+          return date.isAfter(oneWeekAgo) && date.isBefore(now);
+        })
+        .length
+        .toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +212,10 @@ class Logs extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text('6', style: TextStyle(fontSize: 18)),
+                          Text(
+                            getLastWeekCount(commands),
+                            style: TextStyle(fontSize: 18),
+                          ),
                           Text('بار', style: TextStyle(fontSize: 11)),
                         ],
                       ),
@@ -45,14 +236,14 @@ class Logs extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text('6', style: TextStyle(fontSize: 18)),
+                          Text(
+                            getLastWeekCount(alerts),
+                            style: TextStyle(fontSize: 18),
+                          ),
                           Text('بار', style: TextStyle(fontSize: 11)),
                         ],
                       ),
-                      Text(
-                        'آبیاری در این هفته',
-                        style: TextStyle(fontSize: 11),
-                      ),
+                      Text('هشدار در این هفته', style: TextStyle(fontSize: 11)),
                     ],
                   ),
                 ),
@@ -66,14 +257,14 @@ class Logs extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text('6', style: TextStyle(fontSize: 18)),
+                          Text(
+                            getLastWeekCount(reads),
+                            style: TextStyle(fontSize: 18),
+                          ),
                           Text('بار', style: TextStyle(fontSize: 11)),
                         ],
                       ),
-                      Text(
-                        'آبیاری در این هفته',
-                        style: TextStyle(fontSize: 11),
-                      ),
+                      Text('قرائت در این هفته', style: TextStyle(fontSize: 11)),
                     ],
                   ),
                 ),
@@ -86,7 +277,9 @@ class Logs extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: (() {
-                print('object');
+                setState(() {
+                  thisalarm = allmessages;
+                });
               }),
               child: Container(
                 margin: EdgeInsets.only(right: 9),
@@ -100,7 +293,9 @@ class Logs extends StatelessWidget {
             ),
             GestureDetector(
               onTap: (() {
-                print('object');
+                setState(() {
+                  thisalarm = commands;
+                });
               }),
               child: Container(
                 margin: EdgeInsets.only(right: 9),
@@ -114,7 +309,9 @@ class Logs extends StatelessWidget {
             ),
             GestureDetector(
               onTap: (() {
-                print('object');
+                setState(() {
+                  thisalarm = alerts;
+                });
               }),
               child: Container(
                 margin: EdgeInsets.only(right: 9),
@@ -128,7 +325,9 @@ class Logs extends StatelessWidget {
             ),
             GestureDetector(
               onTap: (() {
-                print('object');
+                setState(() {
+                  thisalarm = reads;
+                });
               }),
               child: Container(
                 margin: EdgeInsets.only(right: 9),
@@ -137,41 +336,17 @@ class Logs extends StatelessWidget {
                   color: Color(0x782C2B2B),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Column(children: [Text('قرایت')]),
+                child: Column(children: [Text('قرائت')]),
               ),
             ),
           ],
         ),
-        Message(
-          'water',
-          'آبیاری خودکار',
-          '8:00 1405/6/7',
-          '25 میلی لیتر طبق دستور',
-        ),
-        Message(
-          'water',
-          'آبیاری خودکار',
-          '8:00 1405/6/7',
-          '25 میلی لیتر طبق دستور',
-        ),
-        Message(
-          'water',
-          'آبیاری خودکار',
-          '8:00 1405/6/7',
-          '25 میلی لیتر طبق دستور',
-        ),
-        Message(
-          'water',
-          'آبیاری خودکار',
-          '8:00 1405/6/7',
-          '25 میلی لیتر طبق دستور',
-        ),
-        Message(
-          'water',
-          'آبیاری خودکار',
-          '8:00 1405/6/7',
-          '25 میلی لیتر طبق دستور',
-        ),
+
+        // for (var i = 0; i < reads.length; i++) {
+        //   reads[i]
+        // };
+        ...thisalarm,
+        SizedBox(height: 90),
       ],
     );
   }
@@ -180,16 +355,22 @@ class Logs extends StatelessWidget {
 class Message extends StatelessWidget {
   final String type;
   final String title;
-  final String time;
+  final String supabase_time;
+  String time;
   final String description;
-  const Message(
+  Message(
     this.type,
     this.title,
     this.time,
-    this.description, {
+    this.description,
+    this.supabase_time, {
     super.key,
   });
-
+  final Map<String, List> anytypes = {
+    'read': [AppColors.purple, Icons.sensors_rounded],
+    'command': [AppColors.blue, Icons.water_drop],
+    'alert': [AppColors.orange, Icons.warning_rounded],
+  };
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -212,9 +393,10 @@ class Message extends StatelessWidget {
               shape: BoxShape.circle,
             ),
 
-            child: const Icon(
-              Icons.water_drop,
-              color: AppColors.blue,
+            child: Icon(
+              // ,
+              anytypes[type]![1],
+              color: anytypes[type]![0],
               size: 20,
             ),
           ),

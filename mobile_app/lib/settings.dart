@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'main.dart';
 import 'Home.dart';
 import 'public.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'goldoonban_loading.dart';
 
 // به‌جای Enum، فقط از یه متن ساده استفاده می‌کنیم
@@ -86,9 +87,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             .toList();
         print(_times);
         print(_weekdays);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('بارگزاری شد')));
       } else if (result?['type'] == 1) {
         print('object');
         settingsmaxindampertype = double.parse(result?['max']);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('بارگزاری شد')));
       }
     });
   }
@@ -313,7 +320,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _pumpCard(),
         const SizedBox(height: 20),
         _advanced(),
-        const SizedBox(height: 20),
+        const SizedBox(height: 100),
       ],
     );
   }
@@ -372,6 +379,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() {
                     isOn = !isOn;
                     DataBase.updateSettings(warning: isOn ? 1 : 0);
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(' ذخیره شد ')));
                   });
                 },
                 child: Container(
@@ -945,10 +955,120 @@ class __advanced extends State<_advanced> {
           ),
           AnimatedSize(
             duration: Duration(milliseconds: 300),
-            child: suggested ? Text('تنظیمات پیشرفته') : SizedBox(),
+            child: suggested ? advancedwidget() : SizedBox(),
           ),
         ],
       ),
+    );
+  }
+}
+
+class advancedwidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        PotNameInput(variable: 'supabase_url'),
+        SizedBox(height: 9),
+        PotNameInput(variable: 'supabase_anonkey'),
+      ],
+    );
+  }
+}
+
+class PotNameInput extends StatefulWidget {
+  final String variable;
+  const PotNameInput({super.key, required this.variable});
+
+  @override
+  State<PotNameInput> createState() => _PotNameInputState(variable);
+}
+
+class _PotNameInputState extends State<PotNameInput> {
+  final String variable;
+  _PotNameInputState(this.variable);
+  final TextEditingController controller = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    loadName();
+  }
+
+  // خواندن مقدار ذخیره‌شده
+  Future<void> loadName() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      controller.text = prefs.getString('$variable') ?? '';
+    });
+  }
+
+  // ذخیره مقدار
+  Future<void> saveName() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString('$variable', controller.text);
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$variable ذخیره شد ')));
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: controller,
+            cursorColor: AppColors.accent,
+            decoration: InputDecoration(
+              hintText: '$variable را وارد کنید',
+
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppColors.accent, width: 1.5),
+              ),
+
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppColors.accent, width: 2),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 8),
+
+        SizedBox(
+          width: 50,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: saveName,
+            style: ButtonStyle(
+              backgroundColor: WidgetStatePropertyAll(AppColors.accent),
+
+              foregroundColor: WidgetStatePropertyAll(AppColors.bg),
+
+              shape: const WidgetStatePropertyAll(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+              ),
+
+              padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+            ),
+
+            child: const Icon(Icons.check_rounded, size: 30),
+          ),
+        ),
+      ],
     );
   }
 }
