@@ -1,3 +1,4 @@
+```yaml
 name: Goldoonban Release
 
 on:
@@ -16,9 +17,11 @@ jobs:
   # ============================================================
   # ANDROID
   # ============================================================
+
   android:
     name: Android
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: mobile_app
@@ -50,36 +53,38 @@ jobs:
             --release \
             --build-number ${{ github.run_number }}
 
-      - name: Rename Android files
+      - name: Prepare Android files
         shell: bash
         run: |
-          mkdir -p release
+          mkdir -p "$GITHUB_WORKSPACE/release/android"
 
           cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-            release/Goldoonban-arm64-v8a.apk
+            "$GITHUB_WORKSPACE/release/android/Goldoonban-arm64-v8a.apk"
 
           cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
-            release/Goldoonban-armeabi-v7a.apk
+            "$GITHUB_WORKSPACE/release/android/Goldoonban-armeabi-v7a.apk"
 
           cp build/app/outputs/flutter-apk/app-x86_64-release.apk \
-            release/Goldoonban-x86_64.apk
+            "$GITHUB_WORKSPACE/release/android/Goldoonban-x86_64.apk"
 
           cp build/app/outputs/bundle/release/app-release.aab \
-            release/Goldoonban.aab
+            "$GITHUB_WORKSPACE/release/android/Goldoonban.aab"
 
       - name: Upload Android
         uses: actions/upload-artifact@v4
         with:
           name: android
-          path: mobile_app/release/
+          path: release/android/
 
 
   # ============================================================
   # WEB
   # ============================================================
+
   web:
     name: Web
     runs-on: ubuntu-latest
+
     defaults:
       run:
         working-directory: mobile_app
@@ -102,9 +107,10 @@ jobs:
         run: flutter build web --release
 
       - name: Create Web ZIP
+        shell: bash
         run: |
           cd build
-          zip -r ../../Goldoonban-Web.zip web
+          zip -r "$GITHUB_WORKSPACE/Goldoonban-Web.zip" web
 
       - name: Upload Web
         uses: actions/upload-artifact@v4
@@ -116,9 +122,11 @@ jobs:
   # ============================================================
   # WINDOWS
   # ============================================================
+
   windows:
     name: Windows
     runs-on: windows-latest
+
     defaults:
       run:
         working-directory: mobile_app
@@ -148,21 +156,23 @@ jobs:
         run: |
           Compress-Archive `
             -Path build\windows\x64\runner\Release\* `
-            -DestinationPath Goldoonban-Windows.zip
+            -DestinationPath "$env:GITHUB_WORKSPACE\Goldoonban-Windows.zip"
 
       - name: Upload Windows
         uses: actions/upload-artifact@v4
         with:
           name: windows
-          path: mobile_app/Goldoonban-Windows.zip
+          path: Goldoonban-Windows.zip
 
 
   # ============================================================
   # LINUX
   # ============================================================
+
   linux:
     name: Linux
     runs-on: ubuntu-24.04
+
     defaults:
       run:
         working-directory: mobile_app
@@ -200,23 +210,26 @@ jobs:
         run: flutter build linux --release
 
       - name: Create Linux Archive
+        shell: bash
         run: |
-          tar -czf ../Goldoonban-Linux.tar.gz \
+          tar -czf "$GITHUB_WORKSPACE/Goldoonban-Linux.tar.gz" \
             -C build/linux/x64/release bundle
 
       - name: Upload Linux
         uses: actions/upload-artifact@v4
         with:
           name: linux
-          path: mobile_app/Goldoonban-Linux.tar.gz
+          path: Goldoonban-Linux.tar.gz
 
 
   # ============================================================
   # MACOS
   # ============================================================
+
   macos:
     name: macOS
     runs-on: macos-latest
+
     defaults:
       run:
         working-directory: mobile_app
@@ -242,20 +255,22 @@ jobs:
         run: flutter build macos --release
 
       - name: Create macOS ZIP
+        shell: bash
         run: |
           cd build/macos/Build/Products/Release
-          zip -r ../../../../../../Goldoonban-macOS.zip *.app
+          zip -r "$GITHUB_WORKSPACE/Goldoonban-macOS.zip" *.app
 
       - name: Upload macOS
         uses: actions/upload-artifact@v4
         with:
           name: macos
-          path: mobile_app/Goldoonban-macOS.zip
+          path: Goldoonban-macOS.zip
 
 
   # ============================================================
-  # CREATE RELEASE
+  # CREATE GITHUB RELEASE
   # ============================================================
+
   release:
     name: GitHub Release
     runs-on: ubuntu-latest
@@ -273,40 +288,62 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: android
-          path: release
+          path: release/android
 
       - name: Download Web
         uses: actions/download-artifact@v4
         with:
           name: web
-          path: release
+          path: release/web
 
       - name: Download Windows
         uses: actions/download-artifact@v4
         with:
           name: windows
-          path: release
+          path: release/windows
 
       - name: Download Linux
         uses: actions/download-artifact@v4
         with:
           name: linux
-          path: release
+          path: release/linux
 
       - name: Download macOS
         uses: actions/download-artifact@v4
         with:
           name: macos
-          path: release
+          path: release/macos
 
-      - name: Create Release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Show Release Files
+        shell: bash
+        run: |
+          echo "=============================="
+          echo "Release files:"
+          echo "=============================="
+          find release -type f -print
+          echo "=============================="
+
+      - name: Get Version
+        id: version
+        shell: bash
         run: |
           VERSION=$(grep '^version:' mobile_app/pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
           gh release create \
             "v${VERSION}-build-${{ github.run_number }}" \
-            release/* \
+            release/android/*.apk \
+            release/android/*.aab \
+            release/web/*.zip \
+            release/windows/*.zip \
+            release/linux/*.tar.gz \
+            release/macos/*.zip \
             --title "Goldoonban ${VERSION} Build #${{ github.run_number }}" \
             --generate-notes
+```
