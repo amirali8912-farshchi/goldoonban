@@ -1,4 +1,4 @@
-```yaml
+
 name: Goldoonban Release
 
 on:
@@ -346,4 +346,4 @@ jobs:
             release/macos/*.zip \
             --title "Goldoonban ${VERSION} Build #${{ github.run_number }}" \
             --generate-notes
-```
+
