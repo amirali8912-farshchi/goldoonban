@@ -1,0 +1,297 @@
+name: Goldoonban Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: "3.44.8"
+
+jobs:
+
+  # ============================================================
+  # ANDROID
+  # ============================================================
+  android:
+    name: Build Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Get app version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          VERSION_NAME=$(echo "$VERSION" | cut -d'+' -f1)
+
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+
+      # APK - ARM64
+      - name: Build ARM64 APK
+        run: |
+          flutter build apk \
+            --release \
+            --target-platform android-arm64 \
+            --build-number ${{ github.run_number }}
+
+      - name: Rename ARM64 APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/Goldoonban-arm64.apk
+
+      # APK - ARMv7
+      - name: Build ARMv7 APK
+        run: |
+          flutter build apk \
+            --release \
+            --target-platform android-arm \
+            --build-number ${{ github.run_number }}
+
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/Goldoonban-armv7.apk
+
+      # APK - x86_64
+      - name: Build x86_64 APK
+        run: |
+          flutter build apk \
+            --release \
+            --target-platform android-x64 \
+            --build-number ${{ github.run_number }}
+
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/Goldoonban-x86_64.apk
+
+      # AAB
+      - name: Build AAB
+        run: |
+          flutter build appbundle \
+            --release \
+            --build-number ${{ github.run_number }}
+
+      - name: Rename AAB
+        run: |
+          mv build/app/outputs/bundle/release/app-release.aab \
+             build/app/outputs/bundle/release/Goldoonban.aab
+
+      - name: Upload Android
+        uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
+
+
+  # ============================================================
+  # WEB
+  # ============================================================
+  web:
+    name: Build Web
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Web
+        run: |
+          flutter build web --release
+
+      - name: Compress Web
+        run: |
+          cd build
+          zip -r ../Goldoonban-Web.zip web
+
+      - name: Upload Web
+        uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: Goldoonban-Web.zip
+
+
+  # ============================================================
+  # WINDOWS
+  # ============================================================
+  windows:
+    name: Build Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable Windows
+        run: flutter config --enable-windows-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Windows
+        run: flutter build windows --release
+
+      - name: Compress Windows
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path build\windows\x64\runner\Release\* `
+            -DestinationPath Goldoonban-Windows.zip
+
+      - name: Upload Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: Goldoonban-Windows.zip
+
+
+  # ============================================================
+  # LINUX
+  # ============================================================
+  linux:
+    name: Build Linux
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            liblzma-dev \
+            libstdc++-12-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable Linux
+        run: flutter config --enable-linux-desktop
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Linux
+        run: flutter build linux --release
+
+      - name: Compress Linux
+        run: |
+          tar -czf Goldoonban-Linux.tar.gz \
+            -C build/linux/x64/release bundle
+
+      - name: Upload Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: Goldoonban-Linux.tar.gz
+
+
+  # ============================================================
+  # CREATE GITHUB RELEASE
+  # ============================================================
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    needs:
+      - android
+      - web
+      - windows
+      - linux
+
+    steps:
+      - name: Download Android
+        uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: release/android
+
+      - name: Download Web
+        uses: actions/download-artifact@v4
+        with:
+          name: web
+          path: release/web
+
+      - name: Download Windows
+        uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: release/windows
+
+      - name: Download Linux
+        uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: release/linux
+
+      - name: Get Version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(grep '^version:' "$GITHUB_WORKSPACE/pubspec.yaml" | sed 's/version: //')
+          VERSION_NAME=$(echo "$VERSION" | cut -d'+' -f1)
+
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "build_number=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release/final
+
+          find release/android -type f -exec cp {} release/final/ \;
+          find release/web -type f -exec cp {} release/final/ \;
+          find release/windows -type f -exec cp {} release/final/ \;
+          find release/linux -type f -exec cp {} release/final/ \;
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create \
+            "v${{ steps.version.outputs.version_name }}-${{ steps.version.outputs.build_number }}" \
+            release/final/* \
+            --title "Goldoonban ${{ steps.version.outputs.version_name }}+${{ steps.version.outputs.build_number }}" \
+            --generate-notes
