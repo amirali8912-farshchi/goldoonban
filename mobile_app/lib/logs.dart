@@ -82,6 +82,7 @@ class _Logs extends State<Logs> {
               "ابیاری طبق دستور",
               unreadedcommand[i]['created_at'].toString(),
               deletabel: true,
+              id: unreadedcommand[i]['id'],
             ),
           );
           commands.add(
@@ -92,6 +93,7 @@ class _Logs extends State<Logs> {
               "ابیاری طبق دستور",
               unreadedcommand[i]['created_at'].toString(),
               deletabel: true,
+              id: unreadedcommand[i]['id'],
             ),
           );
         }
@@ -457,14 +459,7 @@ class Message extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: 4),
-                Align(
-                  alignment: Alignment.bottomRight,
-                  child: Text(
-                    description,
-                    style: TextStyle(color: AppColors.textDim, fontSize: 13),
-                    // textAlign: TextAlign.start,
-                  ),
-                ),
+                this.deletabel ? Rowed() : Aligned(),
               ],
             ),
           ),
@@ -473,7 +468,7 @@ class Message extends StatelessWidget {
     );
   }
 
-  Widget Aligned(BuildContext context) {
+  Widget Aligned() {
     return Align(
       alignment: Alignment.bottomRight,
       child: Text(
@@ -484,7 +479,7 @@ class Message extends StatelessWidget {
     );
   }
 
-  Widget Rowed(BuildContext context) {
+  Widget Rowed() {
     return Row(
       textDirection: TextDirection.rtl,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
