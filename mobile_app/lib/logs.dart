@@ -401,10 +401,21 @@ class Message extends StatelessWidget {
   });
 
   Future<void> deletetheitem(int idd) async {
+    print(idd);
     try {
-      await Supabase.instance.client.from('users').delete().eq('id', idd);
+      var deleted = await Supabase.instance.client
+          .from('command')
+          .delete()
+          .eq('id', idd)
+          .select();
+      var d = await Supabase.instance.client
+          .from('command')
+          .select()
+          .eq('id', idd)
+          .maybeSingle();
 
-      print('حذف شد');
+      print("deleted:    $deleted");
+      print("deleted:    $d");
       return;
     } catch (e) {
       print('خطا در حذف: $e');
@@ -480,20 +491,29 @@ class Message extends StatelessWidget {
   }
 
   Widget Rowed() {
-    return Row(
-      textDirection: TextDirection.rtl,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          description,
-          style: TextStyle(color: AppColors.textDim, fontSize: 13),
-          // textAlign: TextAlign.start,
+    return Align(
+      alignment: Alignment.bottomRight,
+      child: SizedBox(
+        height: 25,
+        width: double.infinity,
+        child: Row(
+          textDirection: TextDirection.rtl,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              description,
+              style: TextStyle(color: AppColors.textDim, fontSize: 13),
+            ),
+            IconButton(
+              onPressed: () => deletetheitem(id ?? 0),
+              icon: Icon(Icons.delete_outline, color: AppColors.red, size: 23),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
         ),
-        IconButton(
-          onPressed: () => {deletetheitem(id ?? 0)},
-          icon: Icon(Icons.delete_outline, color: AppColors.red),
-        ),
-      ],
+      ),
     );
   }
 }
